@@ -212,24 +212,18 @@ export class WindowManager {
 
   private continueSetWindowModePet(): void {
     if (!this.window) return;
-    // Calculate the bounding rectangle that covers all connected displays.
-    // This allows the transparent pet-mode window to span across monitors,
-    // so the avatar can be dragged freely between them.
+    // Full screen window covering all displays
     const displays = screen.getAllDisplays();
     const minX = Math.min(...displays.map((d) => d.bounds.x));
     const minY = Math.min(...displays.map((d) => d.bounds.y));
     const maxX = Math.max(...displays.map((d) => d.bounds.x + d.bounds.width));
     const maxY = Math.max(...displays.map((d) => d.bounds.y + d.bounds.height));
-    const combinedWidth = maxX - minX;
-    const combinedHeight = maxY - minY;
 
-    // Resize and position the window to cover the entire virtual screen
-    // so the avatar is not clipped when dragged to a second monitor.
     this.window.setBounds({
       x: minX,
       y: minY,
-      width: combinedWidth,
-      height: combinedHeight,
+      width: maxX - minX,
+      height: maxY - minY,
     });
 
     if (isMac) this.window.setWindowButtonVisibility(false);

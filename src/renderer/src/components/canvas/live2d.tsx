@@ -1,7 +1,7 @@
 /* eslint-disable no-shadow */
 /* eslint-disable no-underscore-dangle */
 /* eslint-disable @typescript-eslint/ban-ts-comment */
-import { memo, useRef, useEffect } from "react";
+import { memo, useRef, useEffect, useState } from "react";
 import { useLive2DConfig } from "@/context/live2d-config-context";
 import { useIpcHandlers } from "@/hooks/utils/use-ipc-handlers";
 import { useInterrupt } from "@/hooks/utils/use-interrupt";
@@ -26,6 +26,28 @@ export const Live2D = memo(
     const { aiState } = useAiState();
     const { resetExpression } = useLive2DExpression();
     const isPet = mode === 'pet';
+    const [renderKey, setRenderKey] = useState(0);
+
+    // Force re-render when entering pet mode to ensure transform is applied
+    useEffect(() => {
+      if (isPet) {
+        // Delay slightly to ensure DOM is ready
+        const timer = setTimeout(() => {
+          setRenderKey((k) => k + 1);
+        }, 100);
+        return () => clearTimeout(timer);
+      }
+    }, [isPet]);
+
+    // Also force re-render after initial mount in pet mode
+    useEffect(() => {
+      if (isPet) {
+        const timer = setTimeout(() => {
+          setRenderKey((k) => k + 1);
+        }, 500);
+        return () => clearTimeout(timer);
+      }
+    }, []);
 
     // Get canvasRef from useLive2DResize
     const { canvasRef } = useLive2DResize({
@@ -93,9 +115,14 @@ export const Live2D = memo(
       window.api?.showContextMenu?.();
     };
 
+    // Calculate offset to move model from center to bottom-right with some margin
+    // The model is centered on canvas, so we offset by +42% width and +30% height
+    const petOffsetX = isPet ? "42%" : "0";
+    const petOffsetY = isPet ? "30%" : "0";
+
     return (
       <div
-        ref={internalContainerRef} // Ref for useLive2DResize if it observes this element
+        ref={internalContainerRef}
         id="live2d-internal-wrapper"
         style={{
           width: "100%",
@@ -110,6 +137,7 @@ export const Live2D = memo(
         {...handlers}
       >
         <canvas
+          key={`canvas-${renderKey}`}
           id="canvas"
           ref={canvasRef}
           style={{
@@ -118,6 +146,8 @@ export const Live2D = memo(
             pointerEvents: isPet && forceIgnoreMouse ? "none" : "auto",
             display: "block",
             cursor: isDragging ? "grabbing" : "default",
+            // Move model from center to bottom-right in pet mode
+            transform: `translate(${petOffsetX}, ${petOffsetY})`,
           }}
         />
       </div>
