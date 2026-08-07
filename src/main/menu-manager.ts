@@ -13,7 +13,7 @@ export interface ConfigFile {
 export class MenuManager {
   private tray: Tray | null = null;
 
-  private currentMode: 'window' | 'pet' = 'window';
+  private currentMode: 'window' | 'pet' = 'pet';
 
   private configFiles: ConfigFile[] = [];
 

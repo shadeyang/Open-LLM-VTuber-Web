@@ -83,8 +83,9 @@ export class LAppLive2DManager {
 
   /**
    * 画面をドラッグした時の処理
-   * 
+   *
    * 当拖动屏幕时的处理
+   * 修改为以模型自身为参考坐标进行跟随
    *
    * @param x 画面のX座標
    * @param y 画面のY座標
@@ -94,7 +95,28 @@ export class LAppLive2DManager {
       const model: LAppModel = this.getModel(i)!;
 
       if (model) {
-        model.setDragging(x, y);
+        // Get model position from model matrix
+        const modelMatrix = model.getModelMatrix();
+        if (modelMatrix) {
+          // Model matrix position is in canvas coordinates
+          // Get model center position
+          const modelCenterX = canvas ? canvas.width / 2 : 0;
+          const modelCenterY = canvas ? canvas.height / 2 : 0;
+
+          // Calculate offset relative to model center
+          // x and y are in view coordinates (-1 to 1), convert to canvas coords
+          const canvasX = canvas ? canvas.width : 0;
+          const canvasY = canvas ? canvas.height : 0;
+
+          // The drag offset should be relative to model center
+          // When user drags, the model should follow relative to where it currently is
+          const dragOffsetX = x; // x is already a delta from center in view coordinates
+          const dragOffsetY = -y; // y is inverted (screen Y is down, view Y is up)
+
+          model.setDragging(dragOffsetX, dragOffsetY);
+        } else {
+          model.setDragging(x, y);
+        }
       }
     }
   }

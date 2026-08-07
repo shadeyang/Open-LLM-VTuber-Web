@@ -18,7 +18,7 @@ export class WindowManager {
 
   private hoveringComponents: Set<string> = new Set();
 
-  private currentMode: 'window' | 'pet' = 'window';
+  private currentMode: 'window' | 'pet' = 'pet';
 
   // Track if mouse events are forcibly ignored
   private forceIgnoreMouse = false;
@@ -59,7 +59,7 @@ export class WindowManager {
       height: 670,
       show: false,
       transparent: true,
-      backgroundColor: '#ffffff',
+      backgroundColor: this.currentMode === 'pet' ? '#00000000' : '#ffffff',
       autoHideMenuBar: true,
       frame: false,
       icon: process.platform === 'win32'
@@ -79,6 +79,15 @@ export class WindowManager {
 
     this.setupWindowEvents();
     this.loadContent();
+
+    // If default mode is pet, apply pet mode configuration immediately
+    if (this.currentMode === 'pet') {
+      this.window.webContents.once('did-finish-load', () => {
+        setTimeout(() => {
+          this.setWindowMode('pet');
+        }, 100);
+      });
+    }
 
     this.window.on('enter-full-screen', () => {
       this.window?.webContents.send('window-fullscreen-change', true);

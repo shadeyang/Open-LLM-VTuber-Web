@@ -311,8 +311,8 @@ export const useLive2DModel = ({
     }
     // --- End Continue Drag Logic ---
 
-    // --- Pet Hover Logic (Unchanged) ---
-    if (isPet && !isDragging && !isPotentialTapRef.current && electronApi && adapter && view && model && canvasRef.current) {
+    // --- Pet Hover Logic & Visual Follow ---
+    if (isPet && !isDragging && !isPotentialTapRef.current && adapter && view && model && canvasRef.current) {
       const canvas = canvasRef.current;
       const rect = canvas.getBoundingClientRect();
       const x = e.clientX - rect.left;
@@ -323,14 +323,33 @@ export const useLive2DModel = ({
       const modelX = view._deviceToScreen.transformX(scaledX);
       const modelY = view._deviceToScreen.transformY(scaledY);
 
-      const currentHitState = model.anyhitTest(modelX, modelY) !== null || model.isHitOnModel(modelX, modelY);
+      // Get model's current position from its matrix
+      let modelCenterX = 0;
+      let modelCenterY = 0;
+      if (model._modelMatrix) {
+        const matrix = model._modelMatrix.getArray();
+        modelCenterX = matrix[12];
+        modelCenterY = matrix[13];
+      }
 
-      if (currentHitState !== isHoveringModelRef.current) {
-        isHoveringModelRef.current = currentHitState;
-        electronApi.ipcRenderer.send('update-component-hover', 'live2d-model', currentHitState);
+      // Calculate offset relative to model's current position
+      const offsetX = modelX - modelCenterX;
+      const offsetY = modelY - modelCenterY;
+
+      // Visual follow effect - pass relative offset to model for head/eye tracking
+      model.setDragging(offsetX, offsetY);
+
+      // Update hover state for electron UI
+      if (electronApi) {
+        const currentHitState = model.anyhitTest(modelX, modelY) !== null || model.isHitOnModel(modelX, modelY);
+
+        if (currentHitState !== isHoveringModelRef.current) {
+          isHoveringModelRef.current = currentHitState;
+          electronApi.ipcRenderer.send('update-component-hover', 'live2d-model', currentHitState);
+        }
       }
     }
-    // --- End Pet Hover Logic ---
+    // --- End Pet Hover & Visual Follow Logic ---
   }, [isPet, isDragging, electronApi, canvasRef]);
 
   const handleMouseUp = useCallback((e: React.MouseEvent) => {
@@ -385,6 +404,9 @@ export const useLive2DModel = ({
   }, [isDragging, canvasRef, modelInfo]);
 
   const handleMouseLeave = useCallback(() => {
+    const adapter = (window as any).getLAppAdapter?.();
+    const model = adapter?.getModel();
+
     if (isDragging) {
       // If dragging and mouse leaves, treat it like a mouse up to end drag
       handleMouseUp({} as React.MouseEvent); // Pass a dummy event or adjust handleMouseUp signature
@@ -393,7 +415,11 @@ export const useLive2DModel = ({
     if (isPotentialTapRef.current) {
       isPotentialTapRef.current = false;
     }
-    // --- Pet Hover Logic (Unchanged) ---
+    // Reset visual follow when mouse leaves canvas
+    if (isPet && model) {
+      model.setDragging(0, 0);
+    }
+    // --- Pet Hover Logic ---
     if (isPet && electronApi && isHoveringModelRef.current) {
       isHoveringModelRef.current = false;
       electronApi.ipcRenderer.send('update-component-hover', 'live2d-model', false);

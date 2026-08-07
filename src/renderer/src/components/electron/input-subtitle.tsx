@@ -46,7 +46,7 @@ export function InputSubtitle() {
     componentId: 'input-subtitle',
   });
 
-  const [isVisible, setIsVisible] = useState(true);
+  const [isVisible, setIsVisible] = useState(false);
 
   const handleClose = useCallback(() => {
     if (isPet) {
