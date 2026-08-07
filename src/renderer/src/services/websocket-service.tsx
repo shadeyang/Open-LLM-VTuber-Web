@@ -116,11 +116,82 @@ class WebSocketService {
 
   private currentState: 'CONNECTING' | 'OPEN' | 'CLOSING' | 'CLOSED' = 'CLOSED';
 
+  private reconnectAttempts = 0;
+
+  private maxReconnectAttempts = 10;
+
+  private baseReconnectDelay = 1000;
+
+  private maxReconnectDelay = 30000;
+
+  private reconnectTimeoutId: ReturnType<typeof setTimeout> | null = null;
+
+  private shouldReconnect = true;
+
+  private isReconnecting = false;
+
+  private hasShownDisconnectedToast = false;
+
+  private currentUrl: string = '';
+
   static getInstance() {
     if (!WebSocketService.instance) {
       WebSocketService.instance = new WebSocketService();
     }
     return WebSocketService.instance;
+  }
+
+  private getReconnectDelay(): number {
+    const delay = Math.min(
+      this.baseReconnectDelay * Math.pow(2, this.reconnectAttempts),
+      this.maxReconnectDelay,
+    );
+    return delay;
+  }
+
+  private scheduleReconnect() {
+    if (!this.shouldReconnect || this.reconnectAttempts >= this.maxReconnectAttempts) {
+      if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+        toaster.create({
+          title: getTranslation()('error.maxReconnectAttemptsReached'),
+          type: 'error',
+          duration: 3000,
+        });
+      }
+      this.isReconnecting = false;
+      this.hasShownDisconnectedToast = false;
+      return;
+    }
+
+    if (!this.hasShownDisconnectedToast) {
+      toaster.create({
+        title: getTranslation()('error.networkDisconnected'),
+        type: 'warning',
+        duration: 3000,
+      });
+      this.hasShownDisconnectedToast = true;
+    }
+
+    if (this.isReconnecting) {
+      return;
+    }
+
+    this.isReconnecting = true;
+    const delay = this.getReconnectDelay();
+    this.reconnectAttempts++;
+
+    this.reconnectTimeoutId = setTimeout(() => {
+      this.isReconnecting = false;
+      this.connect(this.currentUrl);
+    }, delay);
+  }
+
+  cancelReconnect() {
+    this.shouldReconnect = false;
+    if (this.reconnectTimeoutId) {
+      clearTimeout(this.reconnectTimeoutId);
+      this.reconnectTimeoutId = null;
+    }
   }
 
   private initializeConnection() {
@@ -144,6 +215,10 @@ class WebSocketService {
       this.disconnect();
     }
 
+    this.currentUrl = url;
+    this.shouldReconnect = true;
+    this.isReconnecting = false;
+
     try {
       this.ws = new WebSocket(url);
       this.currentState = 'CONNECTING';
@@ -152,7 +227,15 @@ class WebSocketService {
       this.ws.onopen = () => {
         this.currentState = 'OPEN';
         this.stateSubject.next('OPEN');
+        this.reconnectAttempts = 0;
+        this.isReconnecting = false;
+        this.hasShownDisconnectedToast = false;
         this.initializeConnection();
+        toaster.create({
+          title: getTranslation()('error.networkConnected'),
+          type: 'success',
+          duration: 2000,
+        });
       };
 
       this.ws.onmessage = (event) => {
@@ -172,16 +255,19 @@ class WebSocketService {
       this.ws.onclose = () => {
         this.currentState = 'CLOSED';
         this.stateSubject.next('CLOSED');
+        this.scheduleReconnect();
       };
 
       this.ws.onerror = () => {
         this.currentState = 'CLOSED';
         this.stateSubject.next('CLOSED');
+        this.scheduleReconnect();
       };
     } catch (error) {
       console.error('Failed to connect to WebSocket:', error);
       this.currentState = 'CLOSED';
       this.stateSubject.next('CLOSED');
+      this.scheduleReconnect();
     }
   }
 
@@ -207,6 +293,8 @@ class WebSocketService {
   }
 
   disconnect() {
+    this.cancelReconnect();
+    this.reconnectAttempts = 0;
     this.ws?.close();
     this.ws = null;
   }
