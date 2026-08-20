@@ -116,9 +116,9 @@ export const Live2D = memo(
     };
 
     // Calculate offset to move model from center to bottom-right with some margin
-    // The model is centered on canvas, so we offset by +42% width and +30% height
+    // The model is centered on canvas, so we offset by +42% width and +42% height
     const petOffsetX = isPet ? "42%" : "0";
-    const petOffsetY = isPet ? "30%" : "0";
+    const petOffsetY = isPet ? "42%" : "0";
 
     return (
       <div

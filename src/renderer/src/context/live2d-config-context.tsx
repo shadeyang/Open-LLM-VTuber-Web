@@ -89,7 +89,7 @@ interface Live2DConfigState {
  */
 const DEFAULT_CONFIG = {
   modelInfo: {
-    scrollToResize: true,
+    scrollToResize: false,
   } as ModelInfo | undefined,
   isLoading: false,
 };
@@ -139,7 +139,7 @@ export function Live2DConfigProvider({ children }: { children: React.ReactNode }
       scrollToResize:
         "scrollToResize" in info
           ? info.scrollToResize
-          : (modelInfo?.scrollToResize ?? true),
+          : (modelInfo?.scrollToResize ?? false),
     });
   };
 
