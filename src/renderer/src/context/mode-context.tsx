@@ -73,9 +73,12 @@ export const ModeProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Sync Live2D model offset with mode
   useEffect(() => {
+    const isPet = mode === 'pet';
+    (window as any).__petOffsetEnabled = isPet;
+
     const manager = (window as any).getLive2DManager?.();
     if (manager?.setPetOffset) {
-      manager.setPetOffset(mode === 'pet');
+      manager.setPetOffset(isPet);
     }
   }, [mode]);
 

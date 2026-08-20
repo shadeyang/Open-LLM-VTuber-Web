@@ -416,6 +416,15 @@ export class LAppModel extends CubismUserModel {
 
       this._modelSetting.getLayoutMap(layout);
       this._modelMatrix.setupFromLayout(layout);
+
+      // Apply pet mode bottom-right offset directly to model matrix
+      // The layout typically centers the model at (0,0), so we offset it
+      if ((window as any).__petOffsetEnabled) {
+        const arr = this._modelMatrix.getArray();
+        arr[12] = 1.5;   // translateX
+        arr[13] = -0.8;  // translateY
+      }
+
       this._state = LoadStep.LoadMotion;
 
       // callback

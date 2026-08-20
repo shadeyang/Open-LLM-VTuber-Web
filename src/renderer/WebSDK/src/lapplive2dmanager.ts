@@ -202,11 +202,7 @@ export class LAppLive2DManager {
           projection.multiplyByMatrix(this._viewMatrix);
         }
 
-        // Apply pet mode bottom-right offset by translating the projection matrix
-        // This shifts the model to bottom-right corner
-        if (this._petOffsetEnabled) {
-          projection.translate(0.65, -0.6);
-        }
+        // Pet mode offset is now applied directly in model matrix (lappmodel.ts)
       }
 
       model.update();
