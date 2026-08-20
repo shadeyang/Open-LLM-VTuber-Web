@@ -215,23 +215,6 @@ export class WindowManager {
       height: screenHeight,
     });
 
-    this.window.webContents.send('pre-mode-changed', 'pet');
-  }
-
-  private continueSetWindowModePet(): void {
-    if (!this.window) return;
-
-    // Position pet at bottom-right corner of primary display
-    const primaryDisplay = screen.getPrimaryDisplay();
-    const { width: screenWidth, height: screenHeight } = primaryDisplay.workArea;
-
-    this.window.setBounds({
-      x: 0,
-      y: 0,
-      width: screenWidth,
-      height: screenHeight,
-    });
-
     if (isMac) this.window.setWindowButtonVisibility(false);
     this.window.setResizable(false);
     this.window.setMovable(true);
@@ -239,7 +222,7 @@ export class WindowManager {
     this.window.setFocusable(false);
 
     if (isMac) {
-      this.window.setIgnoreMouseEvents(false);
+      this.window.setIgnoreMouseEvents(true, { forward: true });
       this.window.setVisibleOnAllWorkspaces(true, {
         visibleOnFullScreen: true,
       });
@@ -247,6 +230,13 @@ export class WindowManager {
       this.window.setIgnoreMouseEvents(false, { forward: true });
     }
 
+    this.window.webContents.send('pre-mode-changed', 'pet');
+  }
+
+  private continueSetWindowModePet(): void {
+    // All pet mode setup is now done in setWindowModePet()
+    // This is kept for backward compatibility with renderer IPC
+    if (!this.window) return;
     this.window.webContents.send('mode-changed', 'pet');
   }
   
@@ -258,8 +248,7 @@ export class WindowManager {
     if (!this.window) return;
 
     if (isMac) {
-      this.window.setIgnoreMouseEvents(ignore);
-      // this.window.setIgnoreMouseEvents(ignore, { forward: true });
+      this.window.setIgnoreMouseEvents(ignore, { forward: true });
     } else {
       this.window.setIgnoreMouseEvents(ignore, { forward: true });
     }
@@ -306,7 +295,7 @@ export class WindowManager {
     if (this.window) {
       const shouldIgnore = this.hoveringComponents.size === 0;
       if (isMac) {
-        this.window.setIgnoreMouseEvents(shouldIgnore);
+        this.window.setIgnoreMouseEvents(shouldIgnore, { forward: true });
       } else {
         this.window.setIgnoreMouseEvents(shouldIgnore, { forward: true });
       }
@@ -323,7 +312,7 @@ export class WindowManager {
     // Apply the new setting immediately
     if (this.forceIgnoreMouse) {
       if (isMac) {
-        this.window?.setIgnoreMouseEvents(true);
+        this.window?.setIgnoreMouseEvents(true, { forward: true });
       } else {
         this.window?.setIgnoreMouseEvents(true, { forward: true });
       }
@@ -331,7 +320,7 @@ export class WindowManager {
       // Reapply normal behavior based on hovering components
       const shouldIgnore = this.hoveringComponents.size === 0;
       if (isMac) {
-        this.window?.setIgnoreMouseEvents(shouldIgnore);
+        this.window?.setIgnoreMouseEvents(shouldIgnore, { forward: true });
       } else {
         this.window?.setIgnoreMouseEvents(shouldIgnore, { forward: true });
       }

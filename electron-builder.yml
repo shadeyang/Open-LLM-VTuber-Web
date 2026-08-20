@@ -15,6 +15,7 @@ files:
   - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
 asarUnpack:
   - resources/**
+  - out/renderer/libs/**
 win:
   executableName: open-llm-vtuber-electron
   icon: resources/icon.ico

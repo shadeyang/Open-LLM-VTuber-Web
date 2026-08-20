@@ -3,6 +3,7 @@ import { app, ipcMain, globalShortcut, desktopCapturer, BrowserWindow } from "el
 import { electronApp, optimizer } from "@electron-toolkit/utils";
 import { WindowManager } from "./window-manager";
 import { MenuManager } from "./menu-manager";
+import { join } from "path";
 
 let windowManager: WindowManager;
 let menuManager: MenuManager;
@@ -70,6 +71,15 @@ function setupIPC(): void {
   ipcMain.handle('get-screen-capture', async () => {
     const sources = await desktopCapturer.getSources({ types: ['screen'] });
     return sources[0].id;
+  });
+
+  ipcMain.handle('get-libs-path', () => {
+    // In production: app.asar.unpacked/out/renderer/libs
+    // In development: out/renderer/libs
+    if (app.isPackaged) {
+      return join(process.resourcesPath, 'app.asar.unpacked', 'out', 'renderer', 'libs');
+    }
+    return join(__dirname, '..', 'renderer', 'libs');
   });
 
   ipcMain.on('window-start-drag', () => {

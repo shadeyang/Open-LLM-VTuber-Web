@@ -30,10 +30,26 @@ if (typeof window !== 'undefined') {
   (window as any).getLAppAdapter = () => LAppAdapter.getInstance();
 
   // Dynamically load the Live2D Core script
-  const loadLive2DCore = () => {
+  const loadLive2DCore = async () => {
+    // Get libs path from main process (works in both dev and production)
+    let libsPath = './libs/';
+    try {
+      if (window.api?.getLibsPath) {
+        const resolvedPath = await window.api.getLibsPath();
+        if (resolvedPath.startsWith('/')) {
+          libsPath = `file://${resolvedPath}/`;
+        } else {
+          libsPath = resolvedPath;
+        }
+        console.log('Live2D libs path resolved to:', libsPath);
+      }
+    } catch (error) {
+      console.warn('Failed to get libs path from main process, using default:', error);
+    }
+
     return new Promise<void>((resolve, reject) => {
       const script = document.createElement('script');
-      script.src = './libs/live2dcubismcore.js'; // Path to the copied script
+      script.src = `${libsPath}live2dcubismcore.js`;
       script.onload = () => {
         console.log('Live2D Cubism Core loaded successfully.');
         resolve();

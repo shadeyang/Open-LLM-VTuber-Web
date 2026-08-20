@@ -72,6 +72,7 @@ const api = {
   quit: () => {
     ipcRenderer.send('app-quit');
   },
+  getLibsPath: () => ipcRenderer.invoke('get-libs-path'),
 };
 
 if (process.contextIsolated) {

@@ -276,14 +276,31 @@ export function VADProvider({ children }: { children: React.ReactNode }) {
    * Initialize new VAD instance
    */
   const initVAD = async () => {
+    // Get libs path from main process (works in both dev and production)
+    let libsPath = './libs/';
+    try {
+      if (window.api?.getLibsPath) {
+        const resolvedPath = await window.api.getLibsPath();
+        // Convert to file:// URL for Electron
+        if (resolvedPath.startsWith('/')) {
+          libsPath = `file://${resolvedPath}/`;
+        } else {
+          libsPath = resolvedPath;
+        }
+        console.log('VAD libs path resolved to:', libsPath);
+      }
+    } catch (error) {
+      console.warn('Failed to get libs path from main process, using default:', error);
+    }
+
     const newVAD = await MicVAD.new({
       model: "v5",
       preSpeechPadFrames: 20,
       positiveSpeechThreshold: settings.positiveSpeechThreshold / 100,
       negativeSpeechThreshold: settings.negativeSpeechThreshold / 100,
       redemptionFrames: settings.redemptionFrames,
-      baseAssetPath: './libs/',
-      onnxWASMBasePath: './libs/',
+      baseAssetPath: libsPath,
+      onnxWASMBasePath: libsPath,
       onSpeechStart: handleSpeechStart,
       onSpeechRealStart: handleSpeechRealStart,
       onFrameProcessed: handleFrameProcessed,
