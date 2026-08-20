@@ -47,7 +47,8 @@ export class LAppGlManager {
       return;
     }
 
-     gl = canvas.getContext("webgl2");
+     // Request WebGL context with alpha support for transparent background
+     gl = canvas.getContext("webgl2", { alpha: true, premultipliedAlpha: false });
 
      if (!gl) {
        // gl初期化失敗

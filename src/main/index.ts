@@ -1,5 +1,5 @@
 /* eslint-disable no-shadow */
-import { app, ipcMain, globalShortcut, desktopCapturer } from "electron";
+import { app, ipcMain, globalShortcut, desktopCapturer, BrowserWindow } from "electron";
 import { electronApp, optimizer } from "@electron-toolkit/utils";
 import { WindowManager } from "./window-manager";
 import { MenuManager } from "./menu-manager";
@@ -70,6 +70,22 @@ function setupIPC(): void {
   ipcMain.handle('get-screen-capture', async () => {
     const sources = await desktopCapturer.getSources({ types: ['screen'] });
     return sources[0].id;
+  });
+
+  ipcMain.on('window-start-drag', () => {
+    const wins = BrowserWindow.getAllWindows();
+    if (wins.length > 0) {
+      const win = wins[0];
+      win.webContents.executeJavaScript(
+        "document.body.style.cssText += '-webkit-app-region: drag'; document.documentElement.style.cssText += '-webkit-app-region: drag'",
+      ).catch(() => {});
+      win.webContents.executeJavaScript('document.addEventListener("mouseup", () => { document.body.style.cssText = document.body.style.cssText.replace("-webkit-app-region: drag", ""); document.documentElement.style.cssText = document.documentElement.style.cssText.replace("-webkit-app-region: drag", ""); }, { once: true });').catch(() => {});
+    }
+  });
+
+  ipcMain.on('app-quit', () => {
+    isQuitting = true;
+    app.quit();
   });
 }
 

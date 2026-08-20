@@ -597,9 +597,11 @@ export class LAppModel extends CubismUserModel {
       this._dragX * 10
     ); // -10から10の値を加える
 
-    // ドラッグによる目の向きの調整
-    this._model.addParameterValueById(this._idParamEyeBallX, this._dragX); // -1から1の値を加える
-    this._model.addParameterValueById(this._idParamEyeBallY, this._dragY);
+    // 眼神追踪：hover目标 + drag偏移
+    const eyeX = this._eyeTargetX + this._dragX;
+    const eyeY = this._eyeTargetY + this._dragY;
+    this._model.setParameterValueById(this._idParamEyeBallX, Math.max(-1, Math.min(1, eyeX)));
+    this._model.setParameterValueById(this._idParamEyeBallY, Math.max(-1, Math.min(1, eyeY)));
 
     // 呼吸など
     if (this._breath != null) {
@@ -824,6 +826,19 @@ export class LAppModel extends CubismUserModel {
         return;
       }
     }
+  }
+
+  private _eyeTargetX: number = 0.0;
+  private _eyeTargetY: number = 0.0;
+
+  /**
+   * Set eye tracking target for mouse hover tracking.
+   * @param x Eye target X (-1.0 to 1.0)
+   * @param y Eye target Y (-1.0 to 1.0)
+   */
+  public setEyeTarget(x: number, y: number): void {
+    this._eyeTargetX = Math.max(-1, Math.min(1, x));
+    this._eyeTargetY = Math.max(-1, Math.min(1, y));
   }
 
   /**

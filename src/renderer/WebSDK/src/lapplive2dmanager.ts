@@ -122,6 +122,22 @@ export class LAppLive2DManager {
   }
 
   /**
+   * 眼神追踪（ドラッグ不要）。
+   * Updates eye target for mouse hover tracking.
+   *
+   * @param x Normalized X (-1 to 1)
+   * @param y Normalized Y (-1 to 1)
+   */
+  public onHover(x: number, y: number): void {
+    for (let i = 0; i < this._models.getSize(); i++) {
+      const model: LAppModel = this.getModel(i)!;
+      if (model) {
+        model.setEyeTarget(x, -y);
+      }
+    }
+  }
+
+  /**
    * 画面をタップした時の処理
    *
    * @param x 画面のX座標
@@ -184,6 +200,12 @@ export class LAppLive2DManager {
         // 必要があればここで乗算
         if (this._viewMatrix != null) {
           projection.multiplyByMatrix(this._viewMatrix);
+        }
+
+        // Apply pet mode bottom-right offset by translating the projection matrix
+        // This shifts the model to bottom-right corner
+        if (this._petOffsetEnabled) {
+          projection.translate(0.65, -0.6);
         }
       }
 
@@ -251,6 +273,15 @@ export class LAppLive2DManager {
   _viewMatrix: CubismMatrix44; // モデル描画に用いるview行列
   _models: csmVector<LAppModel>; // モデルインスタンスのコンテナ
   _sceneIndex: number; // 表示するシーンのインデックス値
+  _petOffsetEnabled: boolean = false; // Pet mode offset
+
+  /**
+   * Enable/disable pet mode offset (model in bottom-right).
+   */
+  public setPetOffset(enabled: boolean): void {
+    this._petOffsetEnabled = enabled;
+  }
+
   // モーション再生終了のコールバック関数
   _finishedMotion = (self: ACubismMotion): void => {
     LAppPal.printMessage('Motion Finished:');

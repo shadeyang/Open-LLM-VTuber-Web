@@ -104,21 +104,12 @@ export const Live2D = memo(
     };
 
     const handleContextMenu = (e: React.MouseEvent) => {
-      if (!isPet) {
-        return;
-      }
-
       e.preventDefault();
       console.log(
-        "[ContextMenu] (Pet Mode) Right-click detected, requesting menu...",
+        "[ContextMenu] Right-click detected, requesting menu...",
       );
       window.api?.showContextMenu?.();
     };
-
-    // Calculate offset to move model from center to bottom-right with some margin
-    // The model is centered on canvas, so we offset by +42% width and +42% height
-    const petOffsetX = isPet ? "42%" : "0";
-    const petOffsetY = isPet ? "42%" : "0";
 
     return (
       <div
@@ -131,6 +122,8 @@ export const Live2D = memo(
           overflow: "hidden",
           position: "relative",
           cursor: isDragging ? "grabbing" : "default",
+          // Ensure Live2D area is never part of the drag region
+          WebkitAppRegion: "no-drag",
         }}
         onPointerDown={handlePointerDown}
         onContextMenu={handleContextMenu}
@@ -146,8 +139,7 @@ export const Live2D = memo(
             pointerEvents: isPet && forceIgnoreMouse ? "none" : "auto",
             display: "block",
             cursor: isDragging ? "grabbing" : "default",
-            // Move model from center to bottom-right in pet mode
-            transform: `translate(${petOffsetX}, ${petOffsetY})`,
+            backgroundColor: "transparent",
           }}
         />
       </div>

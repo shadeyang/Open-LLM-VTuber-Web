@@ -71,6 +71,14 @@ export const ModeProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return undefined;
   }, [isElectron]);
 
+  // Sync Live2D model offset with mode
+  useEffect(() => {
+    const manager = (window as any).getLive2DManager?.();
+    if (manager?.setPetOffset) {
+      manager.setPetOffset(mode === 'pet');
+    }
+  }, [mode]);
+
   return (
     <ModeContext.Provider value={{ mode, setMode, isElectron }}>
       {children}

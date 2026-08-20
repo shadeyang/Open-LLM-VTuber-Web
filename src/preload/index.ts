@@ -66,6 +66,12 @@ const api = {
   updateConfigFiles: (files: ConfigFile[]) => {
     ipcRenderer.send('update-config-files', files);
   },
+  startWindowDrag: () => {
+    ipcRenderer.send('window-start-drag');
+  },
+  quit: () => {
+    ipcRenderer.send('app-quit');
+  },
 };
 
 if (process.contextIsolated) {

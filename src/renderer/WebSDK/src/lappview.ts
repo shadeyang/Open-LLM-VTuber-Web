@@ -248,6 +248,30 @@ export class LAppView {
   }
 
   /**
+   * マウスポインタが乗った時の眼神追踪（ドラッグ不要）。
+   * ドラッグ中は onTouchesMoved → onDrag で处理，这里只处理非拖拽时的眼神追踪。
+   *
+   * @param pointX スクリーンX座標
+   * @param pointY スクリーンY座標
+   */
+  public onHover(pointX: number, pointY: number): void {
+    // Skip if currently dragging (onDrag handles eye during drag)
+    if (LAppDelegate.getInstance()._captured) {
+      return;
+    }
+
+    const viewX: number = this.transformViewX(pointX * window.devicePixelRatio);
+    const viewY: number = this.transformViewY(pointY * window.devicePixelRatio);
+
+    const ratio: number = canvas ? canvas.width / canvas.height : 1.0;
+    const normX: number = Math.max(-1, Math.min(1, viewX / ratio));
+    const normY: number = Math.max(-1, Math.min(1, viewY));
+
+    const live2DManager: LAppLive2DManager = LAppLive2DManager.getInstance();
+    live2DManager.onHover(normX, normY);
+  }
+
+  /**
    * X座標をView座標に変換する。
    *
    * @param deviceX デバイスX座標

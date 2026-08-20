@@ -57,6 +57,33 @@ function AppContent(): JSX.Element {
   document.documentElement.style.width = '100%';
   document.body.style.width = '100%';
 
+  // Apply drag region styles for pet mode only
+  useEffect(() => {
+    const root = document.getElementById('root');
+    if (root) {
+      if (mode === 'pet') {
+        root.style.setProperty('-webkit-app-region', 'drag');
+        root.style.cursor = 'move';
+      } else {
+        root.style.setProperty('-webkit-app-region', 'no-drag');
+        root.style.cursor = 'default';
+      }
+    }
+  }, [mode]);
+
+  // Handle window dragging in pet mode
+  const handleDragStart = (e: React.PointerEvent) => {
+    if (mode === 'pet') {
+      const target = e.target as HTMLElement;
+      // Don't drag if clicking on interactive elements, Live2D canvas, or its children
+      const isInteractive = target.closest('button, input, textarea, select, a, [role="button"]');
+      const isLive2D = target.closest('#live2d, #live2d-internal-wrapper, #canvas, canvas');
+      if (!isInteractive && !isLive2D) {
+        (window.api as any)?.startWindowDrag?.();
+      }
+    }
+  };
+
   // Define base style properties shared across modes/breakpoints
   const live2dBaseStyle = {
     position: "absolute" as const,
@@ -85,10 +112,10 @@ function AppContent(): JSX.Element {
   const live2dPetStyle = {
     ...live2dBaseStyle,
     top: 0, // Override position for pet mode
-    left: 0,
-    width: "100vw", // Full viewport
-    height: "100vh",
+    height: "100%",
     zIndex: 15, // Higher zIndex for pet mode overlay
+    left: 0,
+    width: "100%",
   };
 
   return (
@@ -100,6 +127,7 @@ function AppContent(): JSX.Element {
         {...(mode === "window"
           ? getResponsiveLive2DWindowStyle(showSidebar)
           : live2dPetStyle)}
+        onPointerDown={handleDragStart}
       >
         <Live2D />
       </Box>

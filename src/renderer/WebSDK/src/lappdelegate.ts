@@ -104,6 +104,9 @@ export class LAppDelegate {
       canvas!.addEventListener('mouseup', onClickEnded, { passive: true });
     }
 
+    // Global hover tracking for eye follow (always fires, even without drag)
+    document.addEventListener('mousemove', onHoverMoved, { passive: true });
+
     // AppViewの初期化
     this._view!.initialize();
 
@@ -188,8 +191,8 @@ export class LAppDelegate {
 
 
       // 画面の初期化
-      // 屏幕初始化
-      gl!.clearColor(0.0, 0.0, 0.0, 1.0);
+      // 屏幕初始化 - transparent background for pet mode
+      gl!.clearColor(0.0, 0.0, 0.0, 0.0);
 
       // 深度テストを有効化
       // 启用深度测试
@@ -199,10 +202,9 @@ export class LAppDelegate {
       // 近距离的物体会遮挡远距离的物体
       gl!.depthFunc(gl!.LEQUAL);
 
-      // カラーバッファや深度バッファをクリアする
+      // カラーバッファや深度バッファをクリアする - 透明背景
       // 清除颜色缓冲区和深度缓冲区
-      // gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-      gl!.clear(gl!.DEPTH_BUFFER_BIT);
+      gl!.clear(gl!.COLOR_BUFFER_BIT | gl!.DEPTH_BUFFER_BIT);
 
       gl!.clearDepth(1.0);
 
@@ -391,6 +393,23 @@ function onMouseMoved(e: MouseEvent): void {
   const posY: number = e.clientY - rect.top;
 
   LAppDelegate.getInstance()._view!.onTouchesMoved(posX, posY);
+}
+
+/**
+ * マウスポインタが動いたら呼ばれる（ドラッグ不要の眼神追踪用）。
+ * Always tracks mouse position for eye following.
+ */
+function onHoverMoved(e: MouseEvent): void {
+  if (!LAppDelegate.getInstance()._view) {
+    return;
+  }
+
+  // Always use canvas rect for consistent coordinate calculation
+  const rect = canvas ? canvas.getBoundingClientRect() : (e.target as Element).getBoundingClientRect();
+  const posX: number = e.clientX - rect.left;
+  const posY: number = e.clientY - rect.top;
+
+  LAppDelegate.getInstance()._view!.onHover(posX, posY);
 }
 
 /**

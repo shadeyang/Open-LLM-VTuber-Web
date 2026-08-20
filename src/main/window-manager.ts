@@ -59,13 +59,12 @@ export class WindowManager {
       height: 670,
       show: false,
       transparent: true,
-      backgroundColor: this.currentMode === 'pet' ? '#00000000' : '#ffffff',
+      backgroundColor: '#00000000',
       autoHideMenuBar: true,
       frame: false,
       icon: process.platform === 'win32'
         ? join(__dirname, '../../resources/icon.ico')
         : join(__dirname, '../../resources/icon.png'),
-      ...(isMac ? { titleBarStyle: 'hiddenInset' } : {}),
       webPreferences: {
         preload: join(__dirname, '../preload/index.js'),
         sandbox: false,
@@ -203,41 +202,49 @@ export class WindowManager {
     }
 
     this.window.setBackgroundColor('#00000000');
-
     this.window.setAlwaysOnTop(true, 'screen-saver');
-    this.window.setPosition(0, 0);
+
+    // Position pet at bottom-right corner of primary display
+    const primaryDisplay = screen.getPrimaryDisplay();
+    const { width: screenWidth, height: screenHeight } = primaryDisplay.workArea;
+
+    this.window.setBounds({
+      x: 0,
+      y: 0,
+      width: screenWidth,
+      height: screenHeight,
+    });
 
     this.window.webContents.send('pre-mode-changed', 'pet');
   }
 
   private continueSetWindowModePet(): void {
     if (!this.window) return;
-    // Full screen window covering all displays
-    const displays = screen.getAllDisplays();
-    const minX = Math.min(...displays.map((d) => d.bounds.x));
-    const minY = Math.min(...displays.map((d) => d.bounds.y));
-    const maxX = Math.max(...displays.map((d) => d.bounds.x + d.bounds.width));
-    const maxY = Math.max(...displays.map((d) => d.bounds.y + d.bounds.height));
+
+    // Position pet at bottom-right corner of primary display
+    const primaryDisplay = screen.getPrimaryDisplay();
+    const { width: screenWidth, height: screenHeight } = primaryDisplay.workArea;
 
     this.window.setBounds({
-      x: minX,
-      y: minY,
-      width: maxX - minX,
-      height: maxY - minY,
+      x: 0,
+      y: 0,
+      width: screenWidth,
+      height: screenHeight,
     });
 
     if (isMac) this.window.setWindowButtonVisibility(false);
     this.window.setResizable(false);
+    this.window.setMovable(true);
     this.window.setSkipTaskbar(true);
     this.window.setFocusable(false);
 
     if (isMac) {
-      this.window.setIgnoreMouseEvents(true);
+      this.window.setIgnoreMouseEvents(false);
       this.window.setVisibleOnAllWorkspaces(true, {
         visibleOnFullScreen: true,
       });
     } else {
-      this.window.setIgnoreMouseEvents(true, { forward: true });
+      this.window.setIgnoreMouseEvents(false, { forward: true });
     }
 
     this.window.webContents.send('mode-changed', 'pet');
