@@ -1,7 +1,7 @@
 import { Box, Text } from '@chakra-ui/react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { memo } from 'react';
+import { memo, useRef, useEffect } from 'react';
 import { canvasStyles } from './canvas-styles';
 import { useSubtitleDisplay } from '@/hooks/canvas/use-subtitle-display';
 import { useSubtitle } from '@/context/subtitle-context';
@@ -64,76 +64,87 @@ const markdownStyles = {
 };
 
 // Reusable components
-const SubtitleText = memo(({ text }: SubtitleTextProps) => (
-  <Box {...canvasStyles.subtitle.text} overflow="auto" maxH="300px">
-    <ReactMarkdown
-      remarkPlugins={[remarkGfm]}
-      components={{
-        p: ({ children }) => (
-          <Text {...markdownStyles.p}>{children}</Text>
-        ),
-        a: ({ href, children }) => (
-          <a
-            href={href}
-            style={{
-              color: '#90cdf4',
-              textDecoration: 'underline',
-            }}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {children}
-          </a>
-        ),
-        code: ({ className, children }) => {
-          const isInline = !className;
-          return isInline ? (
-            <Text as="code" {...markdownStyles.code}>
+const SubtitleText = memo(({ text }: SubtitleTextProps) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to bottom when text changes
+  useEffect(() => {
+    if (containerRef.current) {
+      containerRef.current.scrollTop = containerRef.current.scrollHeight;
+    }
+  }, [text]);
+
+  return (
+    <Box ref={containerRef} {...canvasStyles.subtitle.text} overflow="auto" maxH="300px">
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={{
+          p: ({ children }) => (
+            <Text {...markdownStyles.p}>{children}</Text>
+          ),
+          a: ({ href, children }) => (
+            <a
+              href={href}
+              style={{
+                color: '#90cdf4',
+                textDecoration: 'underline',
+              }}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               {children}
-            </Text>
-          ) : (
+            </a>
+          ),
+          code: ({ className, children }) => {
+            const isInline = !className;
+            return isInline ? (
+              <Text as="code" {...markdownStyles.code}>
+                {children}
+              </Text>
+            ) : (
+              <Box as="pre" {...markdownStyles.pre}>
+                <code>{children}</code>
+              </Box>
+            );
+          },
+          pre: ({ children }) => (
             <Box as="pre" {...markdownStyles.pre}>
-              <code>{children}</code>
+              {children}
             </Box>
-          );
-        },
-        pre: ({ children }) => (
-          <Box as="pre" {...markdownStyles.pre}>
-            {children}
-          </Box>
-        ),
-        ul: ({ children }) => (
-          <Box as="ul" {...markdownStyles.ul}>
-            {children}
-          </Box>
-        ),
-        ol: ({ children }) => (
-          <Box as="ol" {...markdownStyles.ol}>
-            {children}
-          </Box>
-        ),
-        li: ({ children }) => (
-          <Box as="li" {...markdownStyles.li}>
-            {children}
-          </Box>
-        ),
-        strong: ({ children }) => (
-          <Text {...markdownStyles.strong}>{children}</Text>
-        ),
-        em: ({ children }) => (
-          <Text {...markdownStyles.em}>{children}</Text>
-        ),
-        blockquote: ({ children }) => (
-          <Box as="blockquote" {...markdownStyles.blockquote}>
-            {children}
-          </Box>
-        ),
-      }}
-    >
-      {text}
-    </ReactMarkdown>
-  </Box>
-));
+          ),
+          ul: ({ children }) => (
+            <Box as="ul" {...markdownStyles.ul}>
+              {children}
+            </Box>
+          ),
+          ol: ({ children }) => (
+            <Box as="ol" {...markdownStyles.ol}>
+              {children}
+            </Box>
+          ),
+          li: ({ children }) => (
+            <Box as="li" {...markdownStyles.li}>
+              {children}
+            </Box>
+          ),
+          strong: ({ children }) => (
+            <Text {...markdownStyles.strong}>{children}</Text>
+          ),
+          em: ({ children }) => (
+            <Text {...markdownStyles.em}>{children}</Text>
+          ),
+          blockquote: ({ children }) => (
+            <Box as="blockquote" {...markdownStyles.blockquote}>
+              {children}
+            </Box>
+          ),
+        }}
+      >
+        {text}
+      </ReactMarkdown>
+    </Box>
+  );
+});
 
 SubtitleText.displayName = 'SubtitleText';
 

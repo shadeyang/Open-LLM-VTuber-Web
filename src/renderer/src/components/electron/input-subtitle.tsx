@@ -13,7 +13,7 @@ import {
 } from '@chakra-ui/react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useInputSubtitle } from '@/hooks/electron/use-input-subtitle';
 import { useDraggable } from '@/hooks/electron/use-draggable';
 import { inputSubtitleStyles } from './electron-style';
@@ -95,6 +95,16 @@ export function InputSubtitle() {
 
   const [isVisible, setIsVisible] = useState(false);
 
+  // Ref for auto-scrolling message container
+  const messageContainerRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to bottom when message changes
+  useEffect(() => {
+    if (messageContainerRef.current) {
+      messageContainerRef.current.scrollTop = messageContainerRef.current.scrollHeight;
+    }
+  }, [lastAIMessage]);
+
   const handleClose = useCallback(() => {
     if (isPet) {
       (window.api as any)?.updateComponentHover('input-subtitle', false);
@@ -158,9 +168,10 @@ export function InputSubtitle() {
           >
             {lastAIMessage && (
               <Box
+                ref={messageContainerRef}
                 {...inputSubtitleStyles.messageText}
                 overflow="auto"
-                maxH="120px"
+                maxH="200px"
               >
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm]}
