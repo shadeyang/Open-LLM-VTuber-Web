@@ -210,8 +210,10 @@ class WebSocketService {
   }
 
   connect(url: string) {
+    console.log('[WebSocketService] Attempting to connect to:', url);
     if (this.ws?.readyState === WebSocket.CONNECTING ||
         this.ws?.readyState === WebSocket.OPEN) {
+      console.log('[WebSocketService] Already connected, disconnecting first...');
       this.disconnect();
     }
 
@@ -220,6 +222,7 @@ class WebSocketService {
     this.isReconnecting = false;
 
     try {
+      console.log('[WebSocketService] Creating new WebSocket connection...');
       this.ws = new WebSocket(url);
       this.currentState = 'CONNECTING';
       this.stateSubject.next('CONNECTING');

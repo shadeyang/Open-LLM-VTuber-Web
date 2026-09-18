@@ -292,6 +292,7 @@ function WebSocketHandler({ children }: { children: React.ReactNode }) {
   }, [aiState, addAudioTask, appendHumanMessage, baseUrl, bgUrlContext, setAiState, setConfName, setConfUid, setConfigFiles, setCurrentHistoryUid, setHistoryList, setMessages, setModelInfo, setSubtitleText, startMic, stopMic, setSelfUid, setGroupMembers, setIsOwner, backendSynthComplete, setBackendSynthComplete, clearResponse, handleControlMessage, appendOrUpdateToolCallMessage, interrupt, setBrowserViewData, t]);
 
   useEffect(() => {
+    console.log('[WebSocketHandler] Connecting to:', wsUrl);
     wsService.connect(wsUrl);
   }, [wsUrl]);
 

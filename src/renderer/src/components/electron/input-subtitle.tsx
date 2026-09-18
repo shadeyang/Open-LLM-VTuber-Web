@@ -11,11 +11,58 @@ import {
   VStack,
   IconButton,
 } from '@chakra-ui/react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { useState, useEffect, useCallback } from 'react';
 import { useInputSubtitle } from '@/hooks/electron/use-input-subtitle';
 import { useDraggable } from '@/hooks/electron/use-draggable';
 import { inputSubtitleStyles } from './electron-style';
 import { useMode } from '@/context/mode-context';
+
+// Markdown component styles for pet mode message display
+const messageMarkdownStyles = {
+  p: {
+    margin: 0,
+  },
+  a: {
+    color: 'blue.300',
+    textDecoration: 'underline',
+    _hover: {
+      color: 'blue.200',
+    },
+  },
+  code: {
+    bg: 'whiteAlpha.200',
+    px: 1,
+    borderRadius: 'sm',
+    fontFamily: 'mono',
+    fontSize: '0.85em',
+  },
+  pre: {
+    bg: 'whiteAlpha.200',
+    p: 2,
+    borderRadius: 'md',
+    overflow: 'auto',
+    maxW: '100%',
+  },
+  ul: {
+    margin: '0.25em 0',
+    pl: 3,
+  },
+  ol: {
+    margin: '0.25em 0',
+    pl: 3,
+  },
+  li: {
+    margin: '0.15em 0',
+  },
+  strong: {
+    fontWeight: 'bold',
+  },
+  em: {
+    fontStyle: 'italic',
+  },
+};
 
 export function InputSubtitle() {
   const {
@@ -110,9 +157,73 @@ export function InputSubtitle() {
             {...inputSubtitleStyles.messageStack}
           >
             {lastAIMessage && (
-              <Text {...inputSubtitleStyles.messageText}>
-                {lastAIMessage}
-              </Text>
+              <Box
+                {...inputSubtitleStyles.messageText}
+                overflow="auto"
+                maxH="120px"
+              >
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    p: ({ children }) => (
+                      <Text {...messageMarkdownStyles.p}>{children}</Text>
+                    ),
+                    a: ({ href, children }) => (
+                      <a
+                        href={href}
+                        style={{
+                          color: '#90cdf4',
+                          textDecoration: 'underline',
+                        }}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {children}
+                      </a>
+                    ),
+                    code: ({ className, children }) => {
+                      const isInline = !className;
+                      return isInline ? (
+                        <Text as="code" {...messageMarkdownStyles.code}>
+                          {children}
+                        </Text>
+                      ) : (
+                        <Box as="pre" {...messageMarkdownStyles.pre}>
+                          <code>{children}</code>
+                        </Box>
+                      );
+                    },
+                    pre: ({ children }) => (
+                      <Box as="pre" {...messageMarkdownStyles.pre}>
+                        {children}
+                      </Box>
+                    ),
+                    ul: ({ children }) => (
+                      <Box as="ul" {...messageMarkdownStyles.ul}>
+                        {children}
+                      </Box>
+                    ),
+                    ol: ({ children }) => (
+                      <Box as="ol" {...messageMarkdownStyles.ol}>
+                        {children}
+                      </Box>
+                    ),
+                    li: ({ children }) => (
+                      <Box as="li" {...messageMarkdownStyles.li}>
+                        {children}
+                      </Box>
+                    ),
+                    strong: ({ children }) => (
+                      <Text {...messageMarkdownStyles.strong}>{children}</Text>
+                    ),
+                    em: ({ children }) => (
+                      <Text {...messageMarkdownStyles.em}>{children}</Text>
+                    ),
+                  }}
+                >
+                  {lastAIMessage}
+                </ReactMarkdown>
+              </Box>
             )}
           </VStack>
         )}

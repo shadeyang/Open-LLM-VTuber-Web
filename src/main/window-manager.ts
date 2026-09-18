@@ -70,6 +70,7 @@ export class WindowManager {
         sandbox: false,
         contextIsolation: true,
         nodeIntegration: true,
+        webSecurity: !is.dev, // Disable webSecurity in dev mode to allow loading local JS files
       },
       hasShadow: false,
       paintWhenInitiallyHidden: true,
